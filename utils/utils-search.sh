@@ -17,7 +17,7 @@ pipe_grep_e() {
 		shift
 	done
 
-	(unset IFS ; eval "grep $opts $(printf "-e '%s' " "$@")")
+	(unset IFS ; eval "grep $opts $(printf -- "-e '%s' " "$@")")
 }
 
 
@@ -33,7 +33,7 @@ grep_file_e() {
 		opts="${opts}${opts:+ }$1" ; shift
 	done
 
-	(unset IFS ; eval "grep $opts $(printf "-e '%s' " "$@") $filespec")
+	(unset IFS ; eval "grep $opts $(printf -- "-e '%s' " "$@") $filespec")
 }
 
 
@@ -47,7 +47,7 @@ xargs_grep_e() {
 		opts="${opts}${opts:+ }$1" ; shift
 	done
 
-	(unset IFS ; eval "xargs -r grep $opts $(printf "-e '%s' " "$@")")
+	(unset IFS ; eval "xargs -r grep $opts $(printf -- "-e '%s' " "$@")")
 }
 
 
@@ -61,7 +61,7 @@ xargs0_grep_e() {
 		opts="${opts}${opts:+ }$1" ; shift
 	done
 
-	(unset IFS ; eval "xargs -0 -r grep $opts $(printf "-e '%s' " "$@")")
+	(unset IFS ; eval "xargs -0 -r grep $opts $(printf -- "-e '%s' " "$@")")
 }
 
 
