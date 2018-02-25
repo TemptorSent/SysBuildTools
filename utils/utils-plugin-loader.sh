@@ -47,7 +47,7 @@ load_plugins() {
 	for _plug in $(getvar "$plugins_listname") ; do
 		_plug="${_plug%% }"
 		_plug="${_plug## }"
-		if ( type get_all_${_plug%s}_hooks > /dev/null ) ; then
+		if ( type get_all_${_plug%s}_hooks 2>&1 ) > /dev/null ; then
 			for _hook in $(eval "get_all_${_plug%s}_hooks") ; do
 				[ "$_hook" != "${_hook%_onload}" ] && var_list_has_not all_run hooks ${hook} && __${_hook} && var_list_add all_run_hooks ${_hook}
 			done
@@ -112,7 +112,7 @@ _load_plugins_from_file() {
 				var_list_has "all_${_plugtype}" "$_plug" && continue
 
 				# Setup accessor aliases if they aren't already.
-				( type get_all_${_plugtype} > /dev/null ) || var_list_alias "all_${_plugtype}"
+				( type get_all_${_plugtype} 2>&1 ) > /dev/null  || var_list_alias "all_${_plugtype}"
 
 				# Add current plugin to list for its plugin type and mark file for sourcing.
 				var_list_add "all_${_plugtype}" "$_plug"
