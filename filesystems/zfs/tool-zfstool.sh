@@ -35,8 +35,8 @@ zfstool() {
 	command="$1"
 
 	case "$1" in
-		list) shift; zfs_list_existing && return 0 ;;
-		help) initfstool_usage && return 0 ;;
+		list) shift; zfstool_zfs_list && return 0 ;;
+		help) zfstool_usage && return 0 ;;
 		--*) warning "Unhandled global option '$1'!" ; return 1 ;;
 		*) warning "Unknown command '$1'!" ; return 1 ;;
 	esac
@@ -64,6 +64,6 @@ Commands:
 EOF
 }
 
-zfs_list_existing() {
-	"$_zfstool_zfs" status
+zfstool_zfs_list() {
+	"$_zfstool_zfs" list
 }

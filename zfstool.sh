@@ -29,13 +29,9 @@ _co="$@" && for _i in $_co ; do case "$_i" in -q|--quiet) QUIET="yes" ; break ;;
 
 # load plugins from script dir and ~/.mkimage
 info_prog_set "$scriptname:plugin-loader"
-echo "$@"
 load_plugins "$scriptdir/filesystems/zfs" "tools"
-echo "$@"
 
 info_prog_set "$scriptname"
-
-echo "$@"
 
 zfstool "$@"
 
