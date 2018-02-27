@@ -94,12 +94,12 @@ apk_extract() {
 	file_is_readable "$_apkfile" || ! warning "Could not read '$_apkfile' to extract!" || return 1
 	_apk verify ${VERBOSE:--q} "$_apkfile" || ! warning "Could not verify '$_apkfile'!" || return 1
 
-	_found="$( tar -tz -f "$_apkfile" | sed -n -E $([ "$1" ] && printf '-e s|^(%s).*|\\1|gp ' $@ || printf '1,$ p') | sort -u )"
+	_found="$( tar -tz -f "$_apkfile" | sed -n -E $([ "$1" ] && printf -- '-e s|^(%s).*|\\1|gp ' $@ || printf '1,$ p') | sort -u )"
 	! [ "$_found" ] && msg "No $([ "$1" ] && printf ''\''%s'\'' ' $@ || printf 'files ')found in '$_apkfile', nothing extracted." && return 0
  
 	mkdir_is_writable "$_ddir" || ! warning "Could not create output directory '$_ddir' to extract '$_apkfile'!" || return 1
 	tar -C "$_ddir" -x -f "$_apkfile" $_found || ! warning "Could not extract files${_found+" in '$_found'"} from '$_apkfile'!" || return 1
-	msg "Extracted $(printf ''\''%s'\'' ' $_foundi | tr -s ' \n\t' ' ')from '$_apkfile.'"
+	msg "Extracted $(printf ''\''%s'\'' ' $_found | tr -s ' \n\t' ' ')from '$_apkfile.'"
 
 	return 0
 }
@@ -226,7 +226,7 @@ apkroot_setup() {
 	local _arch="$APKARCH" && [ "$_arch" ] || ! warning "Called without value set in \$APKARCH!" || return 1
 	local _apkroot="$APKROOT" && [ "$_apkroot" ] || ! warning "Called without value set in \$APKROOT!" || return 1
 	local _apkkeysdir="$_apkroot/etc/apk/keys" && mkdir_is_writable "$_apkkeysdir" || ! warning "Can not write to keys directory at '$_apkkeysdir'!" || return 1
-	local _apkrepofile="$_apkroot/etc/apk/repositories" && mkdir_is_writable "$_apkroot/etc/apk" || !warning "Can not write to directory '$_apkroot/etc/apk'!" || return 1
+	local _apkrepofile="$_apkroot/etc/apk/repositories" && mkdir_is_writable "$_apkroot/etc/apk" || ! warning "Can not write to directory '$_apkroot/etc/apk'!" || return 1
 	touch "$_apkrepofile" && file_is_writable "$_apkrepofile" || ! warning "Can not write to apk repositories file '$_apkrepofile'" || return 1
 	
 	while [ $# -gt 0 ] ; do
@@ -260,7 +260,7 @@ apkroot_manifest_installed_packages() {
 	done | while read -r _file _contains ; do
 		if [ "$_contains" ] ; then _pkg="$_file" ; continue ; fi
 		_file="$_apkroot/$_file"
-		if [ "$_file" ] && [ -e "$_file" ] && [ -L "$_file" ] ; then printf 'pkg:%s/%s\tlinkto:%s\t%s\n' "$_arch" "$_pkg" $(readlink -n "$_file") "$_file"
+		if [ "$_file" ] && [ -e "$_file" ] && [ -L "$_file" ] ; then printf 'pkg:%s/%s\tlinkto:%s\t%s\n' "$_arch" "$_pkg" "$(readlink -n "$_file")" "$_file"
 		elif [ "$_file" ] && [ -e "$_file" ] && [ -f "$_file" ] ; then printf 'pkg:%s/%s\tsha512:' "$_arch" "$_pkg" && sha512sum "$_file"
 		fi
 	done | sed -e 's|[[:space:]]*[[:space:]]'"$_apkroot"'/|\t|g' > "$_apkroot/.Manifest-apk-installed"
