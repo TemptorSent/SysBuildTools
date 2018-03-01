@@ -83,8 +83,8 @@ _zfstool_parse_zfstab() {
 	#"$_zfstool_zfs" list -H -p -o type,canmount,name,mountpoint | awk '
 	awk '
 		BEGIN { FS="\t" ; split("", datasets) }
-		/^filesystem/	{ datasets[$3]=$3 ; type[$3]=$1 ; canmount[$3]=$2 ; filesystems[$3]=$3 ; mountpoint[$3]=$4 ; options[$3]=$5 }
-		/^volume/	{ datasetsp[$3]=$3 ; type[$3]=$1 ; size[$3]=$2 ; volumes[$3]=$3 ; sparse[$3]=$4 ; options[$3]=$5 }
+		/^filesystem/	{ datasets[$2]=$2 ; type[$2]=$1 ; filesystems[$2]=$2 ; canmount[$2]=$3 ; mountpoint[$2]=$4 ; options[$2]=$5 }
+		/^volume/	{ datasetsp[$2]=$2 ; type[$2]=$1 ; volumes[$2]=$2 ; volsize[$2]=$3 ; volblocksize[$2]=$4 ; sparse[$2]=$5 ; options[$2]=$6 }
 		END {
 			for ( fs in filesystems ) {
 				opts=options[fs]
@@ -98,7 +98,7 @@ _zfstool_parse_zfstab() {
 				opts=options[vol]
 				gsub(/[[:alnum:]]+=/, "-o &", opts)
 				if ( sparse[vol]=="sparse" ) { sparseflag="-s " } else { sparseflag="" }
-				printf("zfs create %s%s-V %s \"%s\"\n", sparseflag, opts, size[vol], vol)
+				printf("zfs create %s%s-b %s -V %s \"%s\"\n", sparseflag, opts, volblocksize[vol], volsize[vol], vol)
 			}
 		}
 	'
@@ -135,11 +135,14 @@ _zfstool_gen_zfstab() {
 					cmd="( '"$_zfstool_zfs"' get volsize -H -p -s local -t volume " $2 " | cut -f3 )"
 					cmd | getline volsize[$2]
 					close(cmd)
+					cmd="( '"$_zfstool_zfs"' get volblocksize -H -t volume " $2 " | cut -f3 )"
+					cmd | getline volblocksize[$2]
+					close(cmd)
 					cmd="( '"$_zfstool_zfs"' get refreservation -H -p -s local -t volume " $2 " | cut -f3 )"
 					cmd | getline refreservation[$2]
 					close(cmd)
-					if ( refreservation[$2] < volsize[$2] ) { sparse[$2]="sparse" }
-					cmd="( '"$_zfstool_zfs"' get all -H -p -s local -t volume " $2 " | cut -f2,3 --output-delimiter=\"=\" | grep -v \"volsize=\" | tr \"\n\" \" \")"
+					if ( refreservation[$2] != "" && refreservation[$2] < volsize[$2] ) { sparse[$2]="sparse" }
+					cmd="( '"$_zfstool_zfs"' get all -H -p -s local -t volume " $2 " | cut -f2,3 --output-delimiter=\"=\" | grep -v -e \"volsize=\" | tr \"\n\" \" \")"
 					cmd | getline options[$2]
 					close(cmd)
 			}
@@ -148,9 +151,9 @@ _zfstool_gen_zfstab() {
 		END {
 			for ( ds in datasets ) {
 				if ( type[ds] == "filesystem" ) {
-					print type[ds] "\t" canmount[ds] "\t" name[ds] "\t" mountpoint[ds] "\t" options[ds]
+					print type[ds] "\t" name[ds] "\t" canmount[ds] "\t" mountpoint[ds] "\t" options[ds]
 				} else if ( type[ds] == "volume" ) {
-					print type[ds] "\t" volsize[ds] "\t" name[ds] "\t" sparse[ds] "\t" options[ds]
+					print type[ds] "\t" name[ds] "\t" volsize[ds] "\t" volblocksize[ds] "\t" sparse[ds] "\t" options[ds]
 				}
 			}
 		}
