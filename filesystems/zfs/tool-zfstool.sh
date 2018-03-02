@@ -11,7 +11,7 @@
 tool_zfstool() {
 	: "${_zfstool_zpool:=$(command -v zpool)}"
 	: "${_zfstool_zfs:=$(command -v zfs)}"
-	if [ -z "$_zfstool_zpool" ] || [ -z "$_zfstool_zfs" ] || [ "${_zfstool_zpool%/zpool}" != "${_zfstool_zfs%/zfs}"; then
+	if [ -z "$_zfstool_zpool" ] || [ -z "$_zfstool_zfs" ] || [ "${_zfstool_zpool%/zpool}" != "${_zfstool_zfs%/zfs}" ] ; then
 		if [ -x /sbin/zpool ] && [ -x /sbin/zfs ] ; then
 			_zfstool_zpool=/sbin/zpool
 			_zfstool_zfs=/sbin/zfs
@@ -77,10 +77,9 @@ zfstool_zpool_status() {
 }
 
 ### Format:
-#	filesystem	canmount	name	mountpoint	options
-#	volume	size	name	sparse-vol	options
+#	filesystem	name	canmount	mountpoint	options
+#	volume	name	volsize	volblocksize	flag:sparse?	options
 _zfstool_parse_zfstab() {
-	#"$_zfstool_zfs" list -H -p -o type,canmount,name,mountpoint | awk '
 	awk '
 		BEGIN { FS="\t" ; split("", datasets) }
 		/^filesystem/	{ datasets[$2]=$2 ; type[$2]=$1 ; filesystems[$2]=$2 ; canmount[$2]=$3 ; mountpoint[$2]=$4 ; options[$2]=$5 }
@@ -160,3 +159,44 @@ _zfstool_gen_zfstab() {
 	'
 }
 
+##
+#
+# pool definitions
+#
+##
+
+##
+#
+# filesystem definitions
+#
+##
+
+## Sort a list of filesystems in 'zfstab' format into mount order
+#
+_zfstool_order_filesystems() {
+	# type	name	canmount	mountpoint	options
+
+
+
+	# Create list of all potential root filesystems:
+	# Find filesystem specified by pool bootfs property
+	# Find filesystems with canmount=noauto and mountpoint=/
+	# Find filesystem with canmount=on and mountpoint=/
+	# ..if it exist, find filesystems with mountpoint=none and canmount!=off that look like they are BE roots.
+
+	# Determine root pool(s) for all filesystem on the candidate list and add them to the list in the order of the root filesystems.
+
+	# From each root filesystem, walk the tree backwards to its top pool, prepending each filesystem having canmount!=on to the list.
+
+	# For each level of path below /, 
+
+	# Handle all canmount=off paths up to, but not including, the first mountable dataset.
+
+	return
+}
+
+##
+#
+# volume definitions
+#
+##
